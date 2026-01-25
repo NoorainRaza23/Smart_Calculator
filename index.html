@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Calculator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(180deg, #7c3aed, #5b21b6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .app {
+      background: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .header {
+      background: #7c3aed;
+      color: #fff;
+      padding: 16px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .tabs { display: flex; background: #f1f5f9; }
+    .tabs button {
+      flex: 1; padding: 12px; border: none; background: transparent;
+      font-weight: 600; cursor: pointer; color: #334155;
+    }
+    .tabs button.active {
+      background: #ffffff; border-bottom: 3px solid #7c3aed; color: #7c3aed;
+    }
+    .content { padding: 16px; }
+    h3 { margin: 0 0 12px; font-size: 18px; color: #1e293b; }
+    label { display: block; margin-top: 12px; font-size: 14px; color: #475569; font-weight: 500; }
+    input {
+      width: 100%; margin-top: 6px; padding: 12px; border-radius: 10px;
+      border: 1px solid #cbd5f5; font-size: 16px;
+    }
+    input:focus { outline: none; border-color: #7c3aed; }
+    .btn {
+      width: 100%; margin-top: 16px; padding: 14px;
+      background: #7c3aed; color: #fff; border: none;
+      border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+    .result {
+      margin-top: 16px; background: #f8fafc; padding: 14px;
+      border-radius: 12px; font-size: 15px; color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">Smart Calculator</div>
+
+  <div class="tabs">
+    <button id="tab-gst" class="active" onclick="showPage('gst')">GST</button>
+    <button id="tab-discount" onclick="showPage('discount')">Discount</button>
+    <button id="tab-priceWeight" onclick="showPage('priceWeight')">Price & Weight</button>
+  </div>
+
+  <div class="content">
+    <!-- GST PAGE -->
+    <div id="gstPage">
+      <h3>GST Calculator</h3>
+      <label>Base Amount (₹)</label>
+      <input type="number" id="amount" />
+      <label>GST Percentage (%)</label>
+      <input type="number" id="gst" />
+      <label>Quantity</label>
+      <input type="number" id="quantity" value="1" />
+      <label>Original Price per Item (₹)</label>
+      <input type="number" id="originalPerItem" />
+      <button class="btn" onclick="calculateGST()">Calculate</button>
+      <div class="result" id="gstResult"></div>
+    </div>
+
+    <!-- DISCOUNT PAGE -->
+    <div id="discountPage" style="display:none;">
+      <h3>Discount Calculator</h3>
+      <label>Original Price (₹)</label>
+      <input type="number" id="originalPrice" />
+      <label>Final Price (₹)</label>
+      <input type="number" id="finalPrice" />
+      <button class="btn" onclick="calculateDiscount()">Calculate</button>
+      <div class="result" id="discountResult"></div>
+    </div>
+
+    <!-- PRICE & WEIGHT PAGE -->
+    <div id="priceWeightPage" style="display:none;">
+      <h3>Price & Weight Calculator</h3>
+      <label>Price per 1 Kg (₹)</label>
+      <input type="number" id="actualPrice" />
+      <label>Desired Price (₹)</label>
+      <input type="number" id="desiredPrice" />
+      <label>OR Desired Weight (grams)</label>
+      <input type="number" id="desiredWeight" />
+      <button class="btn" onclick="calculateWeight()">Calculate</button>
+      <div class="result" id="priceWeightResult"></div>
+    </div>
+
+    <div style="text-align:center; font-size:13px; color:#6b7280; margin-top:12px;">
+      Design by <strong>Noorain Raza</strong>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(page) {
+  ['gst','discount','priceWeight'].forEach(p => {
+    document.getElementById(p + 'Page').style.display = p === page ? 'block' : 'none';
+    document.getElementById('tab-' + p).classList.toggle('active', p === page);
+  });
+}
+
+function calculateGST() {
+  const amount = parseFloat(document.getElementById('amount').value);
+  const gstPercent = parseFloat(document.getElementById('gst').value);
+  const quantity = parseFloat(document.getElementById('quantity').value) || 1;
+  const originalPerItem = parseFloat(document.getElementById('originalPerItem').value);
+
+  if (isNaN(amount) || isNaN(gstPercent) || quantity <= 0) {
+    gstResult.innerHTML = 'Please enter valid values';
+    return;
+  }
+
+  const gstAmount = (amount * gstPercent) / 100;
+  const total = amount + gstAmount;
+  const perItem = total / quantity;
+
+  let discountText = '';
+  if (!isNaN(originalPerItem) && originalPerItem > perItem) {
+    const discount = ((originalPerItem - perItem) / originalPerItem) * 100;
+    discountText = `<br><strong>Discount: ${discount.toFixed(2)}%</strong>`;
+  }
+
+  gstResult.innerHTML = `GST Amount: ₹${gstAmount.toFixed(2)}<br>
+                         Total Amount: ₹${total.toFixed(2)}<br>
+                         <strong>Per Item (After GST): ₹${perItem.toFixed(2)}</strong>
+                         ${discountText}`;
+}
+
+function calculateDiscount() {
+  const o = parseFloat(originalPrice.value);
+  const f = parseFloat(finalPrice.value);
+  if (isNaN(o) || isNaN(f) || f > o) {
+    discountResult.innerHTML = 'Please enter valid prices';
+    return;
+  }
+  discountResult.innerHTML = `<strong>Discount: ${(((o - f) / o) * 100).toFixed(2)}%</strong>`;
+}
+
+function calculateWeight() {
+  const pricePerKg = parseFloat(actualPrice.value);
+  const desiredP = parseFloat(desiredPrice.value);
+  const desiredW = parseFloat(desiredWeight.value);
+
+  if (isNaN(pricePerKg)) {
+    priceWeightResult.innerHTML = 'Enter price per kg';
+    return;
+  }
+
+  const pricePerGram = pricePerKg / 1000;
+
+  if (!isNaN(desiredP)) {
+    priceWeightResult.innerHTML = `<strong>Weight: ${(desiredP / pricePerGram).toFixed(2)} g</strong>`;
+    return;
+  }
+
+  if (!isNaN(desiredW)) {
+    priceWeightResult.innerHTML = `<strong>Price: ₹${(desiredW * pricePerGram).toFixed(2)}</strong>`;
+    return;
+  }
+
+  priceWeightResult.innerHTML = 'Enter desired price or weight';
+}
+</script>
+</body>
+</html>
